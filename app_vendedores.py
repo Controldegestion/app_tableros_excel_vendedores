@@ -528,7 +528,7 @@ def process_vendedores_tablero(sheet_data, filename, upload_datetime, sheet_name
         # Extraer valores de las celdas B1 (CUIL) y H2 a M2 (Indicadores)
         cuil = sheet_data.iloc[0, 1] if len(sheet_data) > 0 else None  # Celda B1
         indicadores = sheet_data.iloc[1, 7:13].values.tolist()  # Celdas H2 a M2
-        cargo = sheet_data.iloc[1, 1] if len(sheet_data) > 1 else None  # Celda B2
+        Segmento = sheet_data.iloc[1, 1] if len(sheet_data) > 1 else None  # Celda B2
         
         # Crear un DataFrame para los aceleradores
         aceleradores_data = pd.DataFrame([{
@@ -582,9 +582,9 @@ def process_vendedores_tablero(sheet_data, filename, upload_datetime, sheet_name
         leader_name = extract_leader_name(filename)
 
         # Agregar columnas adicionales específicas para vendedores
-        sheet_data['Cargo'] = cargo  # Valor de la celda B2
+        sheet_data['Cargo'] = "Vendedor"  # Valor de la celda B2
         sheet_data['CUIL'] = cuil  # Celda B1
-        sheet_data['Segmento'] = "Vendedores"
+        sheet_data['Segmento'] = Segmento
         sheet_data['Área de influencia'] = ""
         sheet_data['Nombre Lider'] = leader_name
         sheet_data['Fecha_Nombre_Archivo'] = fecha
