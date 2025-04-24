@@ -461,7 +461,7 @@ def process_and_upload_excel(file, original_filename):
         # Guardar la tabla "Resumen RRHH" solo si no hubo errores
         if is_vendedores and resumen_rrhh_data is not None:
             if save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_datetime):
-                st.success(f"Archivo 'Resumen RRHH' guardado como 'RRHH-{upload_datetime}_{original_filename.split('.')[0]}.csv'.")
+                st.success(f"Archivo 'Resumen RRHH' guardado correctamente.csv'.")
 
         if not cleaned_df.empty:
             # Guardar el archivo principal en S3
@@ -636,7 +636,7 @@ def save_aceleradores_to_csv(aceleradores_data, original_filename, upload_dateti
 
         # Subir el archivo CSV a S3
         upload_file_to_s3(csv_buffer, csv_filename, original_filename)
-        st.success(f"Archivo de aceleradores guardado como '{csv_filename}'.")
+        st.success(f"Archivo de aceleradores guardado correctamente'.")
     except Exception as e:
         error_message = f"Error al guardar el archivo de aceleradores: {e}"
         st.error(error_message)
