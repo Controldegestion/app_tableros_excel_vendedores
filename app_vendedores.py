@@ -71,15 +71,11 @@ def validate_file_date(filename):
         current_month = now.month
         current_year = now.year
 
-        # Check if the file date is from the current month, more than two months prior, or a future month
-        if (file_date.year == current_year and file_date.month == current_month) or \
-           (file_date.year == current_year and file_date.month > current_month) or \
-           (file_date.year > current_year) or \
-           (file_date.year == current_year and file_date.month < current_month - 1) or \
-           (file_date.year == current_year - 1 and current_month in [1, 2] and file_date.month < 12 - (1 - current_month)):
-            return False
+        # Check if the file date is from the current month and year
+        if file_date.year == current_year and file_date.month == current_month:
+            return True
 
-        return True
+        return False
     except Exception as e:
         st.error(f"Error al validar la fecha del archivo: {e}")
         return False
@@ -433,7 +429,7 @@ def process_and_upload_excel(file, original_filename):
             return
 
         if not validate_file_date(original_filename):
-            error_message = "La fecha del nombre del archivo solo puede ser del mes anterior al actual."
+            error_message = "La fecha del nombre del archivo solo puede ser del mes  al actual."
             st.error(error_message)
             log_error_to_s3(error_message, original_filename)
             return
