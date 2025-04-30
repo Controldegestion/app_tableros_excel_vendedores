@@ -487,6 +487,9 @@ def is_vendedores_tablero(filename):
 
 def validate_resumen_rrhh_sheet(excel_data, filename):
     try:
+        # Verificar si el archivo es de Autolux
+        is_autolux = "Vendedores Autolux" in filename
+
         if "Resumen RRHH" not in excel_data.sheet_names:
             error_message = "Error: La hoja 'Resumen RRHH' no está presente en el archivo."
             st.error(error_message)
@@ -500,11 +503,19 @@ def validate_resumen_rrhh_sheet(excel_data, filename):
         resumen_rrhh_data.columns = resumen_rrhh_data.columns.str.strip()
 
         # Validar que las columnas requeridas estén presentes
-        required_columns = [
-            'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
-            'Descuentos PPAA', 'COMISION PPAA', '0km', 'Usados', 'Premio Convencional',
-            'Comision Convencional', 'Total a liquidar'
-        ]
+        if is_autolux:
+            required_columns = [
+                'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
+                'Descuentos PPAA', 'MKS', '0km', 'Usados', 'Premio Convencional',
+                'Comision Convencional', 'Total a liquidar'
+            ]
+        else:
+            required_columns = [
+                'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
+                'Descuentos PPAA', 'COMISION PPAA', '0km', 'Usados', 'Premio Convencional',
+                'Comision Convencional', 'Total a liquidar'
+            ]
+
         missing_columns = [col for col in required_columns if col not in resumen_rrhh_data.columns]
         if missing_columns:
             error_message = f"Error: Faltan las siguientes columnas en la hoja 'Resumen RRHH': {', '.join(missing_columns)}"
@@ -608,12 +619,16 @@ def save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_dateti
         fecha = parts[0] if len(parts) > 0 else None
         lider = parts[-1].replace('.xlsx', '') if len(parts) > 1 else None
 
+        # Verificar si el archivo es de Autolux
+        is_autolux = "Vendedores Autolux" in original_filename
+
         # Limpiar el DataFrame eliminando filas completamente vacías en las columnas requeridas
-        resumen_rrhh_data = resumen_rrhh_data.dropna(how='all', subset=[
+        required_columns = [
             'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
-            'Descuentos PPAA', 'COMISION PPAA', '0km', 'Usados', 'Premio Convencional',
-            'Comision Convencional', 'Total a liquidar'
-        ])
+            'Descuentos PPAA', 'MKS' if is_autolux else 'COMISION PPAA', '0km', 'Usados',
+            'Premio Convencional', 'Comision Convencional', 'Total a liquidar'
+        ]
+        resumen_rrhh_data = resumen_rrhh_data.dropna(how='all', subset=required_columns)
 
         # Agregar las columnas "Lider" y "Fecha" al DataFrame
         resumen_rrhh_data.insert(0, 'Lider', lider)
