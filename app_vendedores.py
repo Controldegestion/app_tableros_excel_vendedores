@@ -65,12 +65,17 @@ def validate_filename(filename):
 # Función para validar la fecha del archivo
 def validate_file_date(filename):
     try:
-        # Extraer la fecha del nombre del archivo
         file_date_str = filename.split('+')[0]
         file_date = datetime.strptime(file_date_str, '%d-%m-%Y')
-        
-        # Si no deseas validar la fecha, simplemente retorna True
-        return True
+        now = datetime.now()
+        current_month = now.month
+        current_year = now.year
+
+        # Verifica que el año y mes sean iguales al actual
+        if file_date.year == current_year and file_date.month == current_month:
+            return True
+
+        return False
     except Exception as e:
         st.error(f"Error al validar la fecha del archivo: {e}")
         return False
