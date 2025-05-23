@@ -457,7 +457,7 @@ def process_and_upload_excel(file, original_filename):
         # Guardar la tabla "Resumen RRHH" solo si no hubo errores
         if is_vendedores and resumen_rrhh_data is not None:
             if save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_datetime):
-                st.success(f"Archivo 'Resumen RRHH' guardado correctamente.csv'.")
+                st.success(f"Archivo 'Resumen RRHH' guardado correctamente.csv'")
 
         if not cleaned_df.empty:
             # Guardar el archivo principal en S3
@@ -467,6 +467,10 @@ def process_and_upload_excel(file, original_filename):
             csv_buffer.seek(0)
             if upload_file_to_s3(csv_buffer, csv_filename, original_filename):
                 st.success(f"Archivo '{original_filename}' subido exitosamente.")
+                # Mostrar mensaje emergente con el recuento de CUILs si es vendedores
+                if is_vendedores:
+                    num_cuils = cleaned_df['CUIL'].nunique()
+                    st.info(f"Se cargaron {num_cuils} tableros de colaboradores.")
 
         if not aceleradores_data.empty:
             save_aceleradores_to_csv(aceleradores_data, original_filename, upload_datetime)
