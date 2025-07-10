@@ -72,7 +72,7 @@ def validate_file_date(filename):
         current_year = now.year
 
         # Verifica que el año y mes sean iguales al actual
-        if file_date.year == current_year and file_date.month != current_month:
+        if file_date.year == current_year and file_date.month == current_month:
             return True
 
         return False
