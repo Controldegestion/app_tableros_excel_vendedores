@@ -516,7 +516,7 @@ def validate_resumen_rrhh_sheet(excel_data, filename):
         else:
             required_columns = [
                 'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
-                'Descuentos PPAA', 'COMISION PPAA', '0km', 'Usados', 'Premio Convencional',
+                'Descuentos PPAA', '0km', 'Usados', 'Premio Convencional',
                 'Comision Convencional', 'Total a liquidar'
             ]
 
@@ -629,7 +629,7 @@ def save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_dateti
         # Limpiar el DataFrame eliminando filas completamente vacías en las columnas requeridas
         required_columns = [
             'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
-            'Descuentos PPAA', 'MKS' if is_autolux else 'COMISION PPAA', '0km', 'Usados',
+            'Descuentos PPAA', 'MKS', '0km', 'Usados',
             'Premio Convencional', 'Comision Convencional', 'Total a liquidar'
         ]
         resumen_rrhh_data = resumen_rrhh_data.dropna(how='all', subset=required_columns)
