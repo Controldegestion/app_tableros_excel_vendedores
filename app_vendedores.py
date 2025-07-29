@@ -422,62 +422,69 @@ def check_for_duplicates(cuil, fecha, leader_name):
 # Función para procesar y subir el Excel
 def process_and_upload_excel(file, original_filename):
     try:
+        # Validaciones previas
         if not validate_filename(original_filename):
-            error_message = "El nombre del archivo no cumple con el formato requerido (dd-mm-aaaa+empresa+nombre lider.xlsx)."
-            st.error(error_message)
-            log_error_to_s3(error_message, original_filename)
+            st.error("El nombre del archivo no cumple con el formato requerido (dd-mm-aaaa+empresa+nombre lider.xlsx).")
+            log_error_to_s3("Formato de nombre inválido", original_filename)
             return
 
         if not validate_file_date(original_filename):
-            error_message = "La fecha del nombre del archivo solo puede ser del mes  al actual."
-            st.error(error_message)
-            log_error_to_s3(error_message, original_filename)
+            st.error("La fecha del nombre del archivo no corresponde al mes/año actual.")
+            log_error_to_s3("Fecha de archivo inválida", original_filename)
             return
 
         is_vendedores = is_vendedores_tablero(original_filename)
         excel_data = pd.ExcelFile(file)
+
+        # Marca de tiempo de subida
         argentina_tz = pytz.timezone("America/Argentina/Buenos_Aires")
         now = datetime.now(argentina_tz)
         upload_datetime = now.strftime('%Y-%m-%d_%H-%M-%S')
 
-        # Extraer el nombre del líder desde el nombre del archivo
-        leader_name = extract_leader_name(original_filename)
-
-        # Procesar las hojas del archivo
+        # Procesar hojas
         cleaned_df, aceleradores_data, resumen_rrhh_data, success = process_sheets_until_empty(
             excel_data, original_filename, upload_datetime, is_vendedores
         )
-
         if not success:
-            error_message = "El archivo contiene errores en su estructura y no se cargará"
-            st.error(error_message)
-            log_error_to_s3(error_message, original_filename)
+            st.error("El archivo contiene errores en su estructura y no se cargará.")
             return
 
-        # Guardar la tabla "Resumen RRHH" solo si no hubo errores
+        # Guardar Resumen RRHH (solo para vendedores)
         if is_vendedores and resumen_rrhh_data is not None:
-            if save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_datetime):
-                st.success(f"Archivo 'Resumen RRHH' guardado correctamente.csv'")
+            ok_rrhh = save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_datetime)
+            if not ok_rrhh:
+                st.error("No se pudo guardar 'Resumen RRHH'. Proceso abortado.")
+                return
 
+        # Subir DataFrame principal
         if not cleaned_df.empty:
-            # Guardar el archivo principal en S3
             csv_buffer = BytesIO()
             cleaned_df.to_csv(csv_buffer, index=False, encoding="utf-8-sig")
             csv_filename = f"{now.strftime('%Y-%m-%d_%H-%M-%S')}_{original_filename.split('.')[0]}.csv"
             csv_buffer.seek(0)
-            if upload_file_to_s3(csv_buffer, csv_filename, original_filename):
-                st.success(f"Archivo '{original_filename}' subido exitosamente.")
-                # Mostrar mensaje emergente con el recuento de CUILs si es vendedores
-                if is_vendedores:
-                    num_cuils = cleaned_df['CUIL'].nunique()
-                    st.info(f"Se cargaron {num_cuils} tableros de colaboradores.")
 
+            ok_main = upload_file_to_s3(csv_buffer, csv_filename, original_filename)
+            if not ok_main:
+                st.error("Error al subir el archivo principal a S3. Proceso abortado.")
+                return
+
+            st.success(f"Archivo '{original_filename}' subido exitosamente.")
+            if is_vendedores:
+                num_cuils = cleaned_df['CUIL'].nunique()
+                st.info(f"Se cargaron {num_cuils} tableros de colaboradores.")
+
+        # Guardar aceleradores
         if not aceleradores_data.empty:
-            save_aceleradores_to_csv(aceleradores_data, original_filename, upload_datetime)
+            ok_acc = save_aceleradores_to_csv(aceleradores_data, original_filename, upload_datetime)
+            if not ok_acc:
+                st.error("No se pudo guardar el archivo de aceleradores. Proceso abortado.")
+                return
+
     except Exception as e:
         error_message = f"Error al procesar el archivo Excel: {e}"
         st.error(error_message)
         log_error_to_s3(error_message, original_filename)
+        return
 
 def is_vendedores_tablero(filename):
     try:
@@ -665,18 +672,22 @@ def save_aceleradores_to_csv(aceleradores_data, original_filename, upload_dateti
         # Crear el nombre del archivo CSV
         csv_filename = f"Aceleradores-{upload_datetime}_{original_filename.split('.')[0]}.csv"
 
-        # Guardar el DataFrame en un archivo CSV
+        # Guardar el DataFrame en un archivo CSV en memoria
         csv_buffer = BytesIO()
         aceleradores_data.to_csv(csv_buffer, index=False, encoding="utf-8-sig")
         csv_buffer.seek(0)
 
         # Subir el archivo CSV a S3
         upload_file_to_s3(csv_buffer, csv_filename, original_filename)
-        st.success(f"Archivo de aceleradores guardado correctamente.")
+
+        st.success("Archivo de aceleradores guardado correctamente.")
+        return True
+
     except Exception as e:
         error_message = f"Error al guardar el archivo de aceleradores: {e}"
         st.error(error_message)
         log_error_to_s3(error_message, original_filename)
+        return False
 
 # Función principal de la aplicación
 def main():
