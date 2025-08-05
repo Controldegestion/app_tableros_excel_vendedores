@@ -630,15 +630,22 @@ def save_resumen_rrhh_to_csv(resumen_rrhh_data, original_filename, upload_dateti
         fecha = parts[0] if len(parts) > 0 else None
         lider = parts[-1].replace('.xlsx', '') if len(parts) > 1 else None
 
+        # Validar que las columnas requeridas estén presentes
+        if is_autolux:
+            required_columns = [
+                'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
+                'Descuentos PPAA', 'MKS', '0km', 'Usados', 'Premio Convencional',
+                'Comision Convencional', 'Total a liquidar'
+            ]
+        else:
+            required_columns = [
+                'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
+                'Descuentos PPAA', '0km', 'Usados', 'Premio Convencional',
+                'Comision Convencional', 'Total a liquidar'
+            ]
         # Verificar si el archivo es de Autolux
         is_autolux = "Vendedores Autolux" in original_filename
 
-        # Limpiar el DataFrame eliminando filas completamente vacías en las columnas requeridas
-        required_columns = [
-            'Sucursal', 'Vendedores', 'CUIT', 'LEGAJO', 'Total Ventas', 'Vta PPAA',
-            'Descuentos PPAA', 'MKS', '0km', 'Usados',
-            'Premio Convencional', 'Comision Convencional', 'Total a liquidar'
-        ]
         resumen_rrhh_data = resumen_rrhh_data.dropna(how='all', subset=required_columns)
 
         # Agregar las columnas "Lider" y "Fecha" al DataFrame
@@ -704,3 +711,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
